@@ -14,9 +14,15 @@ nv.addGraph(function() {
 
   chart.yAxis.axisLabel('y');
 
-  var curve = curveData('x^3-3*x^2-2*x', 'x^3-3*x^2-2*x', '#9099BF');
+  var curve = [curveData('x^3-3*x^2-2*x', 'x^3-3*x^2-2*x', '#9099BF')];
+  var lines = makeLines(guesses, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString());
 
-  d3.select('#graph svg').datum(curve)
+  var myData = [curve[0]];
+  for (var i = 0; i < lines.length; i++) {
+    myData.push(lines[i]);
+  }
+
+  d3.select('#graph svg').datum(myData)
                          .transition().duration(350)
                          .call(chart);
 

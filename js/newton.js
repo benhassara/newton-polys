@@ -2,8 +2,7 @@
 // - deal with guesses oscillating between 2 values  ||
 // - catch when derivative will evaluate to zero     ||
 // - determine which tangent lines to display        ||
-// - generate data format usable by nvd3             ||
-// - use MathJax to display polys nicely
+// - use MathJax to display polys nicely             ||
 // || ********************************************** ||
 
 var expr = math.parse('x^3-3*x^2-2*x');
@@ -11,6 +10,10 @@ var guesses = [];
 var tanSlopes = [];
 
 console.log(curveData('x^3-3*x^2-2*x', 'x^3-3*x^2-2*x', '#ff7f0e'));
+
+lineData(1, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), null, null);
+newton('x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), 3);
+console.log(makeLines(guesses, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString()));
 
 
 function newton(func, dydx, guess) {
@@ -62,15 +65,53 @@ function curveData(func, name, colorIn){
 
   var points = [];
 
+  // loop through domain creating points
   for (var i = -4; i < 6; i+=0.25) {
     points.push({x: i, y: math.eval(func, {x: i})});
   }
 
-  return [{
+  return {
     values: points,
     key: name,
     color: colorIn
-  }];
+  };
+}
 
+function lineData(xVal, func, dydx, name, colorIn) {
+  // draw a straight line
+
+  var points = [];
+  var parser = math.parser();
+  var slope = math.eval(dydx, {x: xVal});
+  var f = math.eval(func, {x: xVal});
+
+  // set vars in parsers scope
+  parser.set('slope', slope);
+  parser.set('fx', f);
+  parser.set('x', xVal);
+
+
+  // loop through domain creating points
+  for (var i = -4; i < 6; i+=0.25) {
+    parser.set('i', i);
+    var yVal = parser.eval('slope * (i - x) + fx');
+    points.push({x: i, y: yVal});
+  }
+
+  return {
+    values: points,
+    key: name,
+    color: colorIn
+  };
+}
+
+function makeLines(xVals, func, dydx) {
+  var lines = [];
+
+  for (i = 0; i < xVals.length; i++) {
+    lines.push(lineData(xVals[i], func, dydx, 'x'+i, '#303340'));
+  }
+
+  return lines;
 }
 
