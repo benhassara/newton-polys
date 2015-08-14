@@ -1,1 +1,4 @@
-/* add custom styles */
+
+#graph svg {
+  height: 500px;
+}
