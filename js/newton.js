@@ -1,57 +1,70 @@
-// || ******************* TODO'S ******************* ||
-// - deal with guesses oscillating between 2 values  ||
-// - catch when derivative will evaluate to zero     ||
-// - determine which tangent lines to display        ||
-// - use MathJax to display polys nicely             ||
-// || ********************************************** ||
+// || ******************** TODO'S ********************* ||
+// || - deal with guesses oscillating between 2 values  ||
+// || - catch when derivative will evaluate to zero     ||
+// || - determine which tangent lines to display        ||
+// || - use MathJax to display polys nicely             ||
+// || - generate table for Newton's Method iterations   ||
+// || - add functionality for user set domain           ||
+// || ************************************************* ||
 
-var expr = math.parse('x^3-3*x^2-2*x');
-var guesses = [];
-var tanSlopes = [];
+// var expr = math.parse('x^3-3*x^2-2*x');
+// var guesses = [];
+// var tanSlopes = [];
 
-console.log(curveData('x^3-3*x^2-2*x', 'x^3-3*x^2-2*x', '#ff7f0e'));
+// console.log(curveData('x^3-3*x^2-2*x', 'x^3-3*x^2-2*x', '#ff7f0e'));
 
-lineData(1, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), null, null);
-newton('x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), 3);
-console.log(makeLines(guesses, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString()));
+// lineData(1, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), null, null);
+// newton('x^3-3*x^2-2*x', math.diff(expr, 'x').toString(), 3);
+// console.log(makeLines(guesses, 'x^3-3*x^2-2*x', math.diff(expr, 'x').toString()));
 
+function Newton(func, guess, domain) {
+  this.func = func;
+  this.expr = math.parse(func);
+  this.dydx = math.diff(this.expr, 'x').toString();
+  this.dydxExpr = math.diff(this.expr, 'x');
+  this.guess = guess;
+  this.domain = domain;
+  this.guesses = [];
+  this.tanSlopes = [];
+  this.ans = null;
+}
 
-function newton(func, dydx, guess) {
-  // calculate next guess for root using Newton's method
+Newton.prototype.roots = function(guess) {
+  // calculate root aproximation with Newton-Raphson method
 
   // accuracy
-  var eps = 0.0001;
+  var eps = 0.001;
   var val = {x: guess};
 
-  // append prev guess to array of slopes
-  guesses.push(guess);
-  tanSlopes.push(math.eval(dydx, val));
+  // append prev guess and slope (derivative evaluated at guess)
+  this.guesses.push(guess);
+  this.tanSlopes.push(math.eval(this.dydx, val));
 
   // calc next guess
-  var nextGuess = guess - (math.eval(func, val) / math.eval(dydx, val));
+  var nextGuess = guess - (math.eval(this.func, val) / math.eval(this.dydx, val));
 
   // if within accuracy, return guess
   if ((Math.abs(guess - nextGuess) * 1 / eps) === 0) {
+    this.ans = guess;
     return guess;
   }
-  // check for wildly diverging guesses
   else if (Math.abs(guess - nextGuess) >= 100000) {
-    return "Iterations diverging. Start over with a different initial guess.";
+    return "Iterations diverging. Start over with a different guess.";
   }
   else {
-    return newton(func, dydx, nextGuess);
+    return this.roots(nextGuess);
   }
-}
+};
 
-function testDerivative(dydx, val) {
-  // test derivative value to avoid zero division
+Newton.prototype.testDerivative = function(val) {
+  // test derivative evaluated at val to avoid zero division
 
-  if (math.eval(dydx, {x: val}) === 0)
+  if (math.eval(this.dydx, {x: val}) === 0)
     return false;
   return true;
-}
+};
 
-function curveData(func, name, colorIn){
+Newton.prototype.curveData = function(name, setColor) {
   /* return obj with data for nvd3 line chart
 
   func: string representing the polynomial
@@ -66,33 +79,34 @@ function curveData(func, name, colorIn){
   var points = [];
 
   // loop through domain creating points
-  for (var i = -4; i < 6; i+=0.25) {
-    points.push({x: i, y: math.eval(func, {x: i})});
+  for (var i = this.domain[0]; i <= this.domain[1]; i+=0.10) {
+    points.push({x: i, y: math.eval(this.func, {x: i})});
   }
 
   return {
     values: points,
     key: name,
-    color: colorIn
+    color: setColor
   };
-}
+};
 
-function lineData(xVal, func, dydx, name, colorIn) {
-  // draw a straight line
+Newton.prototype.lineData = function(xVal, name, setColor) {
+  // draw straight line representing 1 iteration of method
 
   var points = [];
   var parser = math.parser();
-  var slope = math.eval(dydx, {x: xVal});
-  var f = math.eval(func, {x: xVal});
+  // dydx evaluated at iteration pt
+  var slope = math.eval(this.dydx, {x: xVal});
+  // fx evaluated at iteration pt
+  var f = math.eval(this.func, {x: xVal});
 
-  // set vars in parsers scope
+  // set vars in parser's scope
   parser.set('slope', slope);
   parser.set('fx', f);
   parser.set('x', xVal);
 
-
   // loop through domain creating points
-  for (var i = -4; i < 6; i+=0.25) {
+  for (var i = this.domain[0]; i <= this.domain[1]; i+=0.10) {
     parser.set('i', i);
     var yVal = parser.eval('slope * (i - x) + fx');
     points.push({x: i, y: yVal});
@@ -101,17 +115,18 @@ function lineData(xVal, func, dydx, name, colorIn) {
   return {
     values: points,
     key: name,
-    color: colorIn
+    color: setColor
   };
-}
+};
 
-function makeLines(xVals, func, dydx) {
+Newton.prototype.makeLines = function(xVals) {
+  // generate lines for iterations of method
+
   var lines = [];
 
   for (i = 0; i < xVals.length; i++) {
-    lines.push(lineData(xVals[i], func, dydx, 'x'+i, '#303340'));
+    lines.push(this.lineData(xVals[i], 'x'+i, '#303340'));
   }
 
   return lines;
-}
-
+};
