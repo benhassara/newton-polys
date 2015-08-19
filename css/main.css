@@ -1,4 +1,16 @@
 
+body {
+  background-color: #303340;
+}
+
+.container {
+  background-color: white;
+  padding-bottom: 20px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
 #graph svg {
+  padding-top: 20px;
   height: 500px;
 }

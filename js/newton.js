@@ -7,7 +7,7 @@
 // || - add functionality for user set domain           ||
 // || ************************************************* ||
 
-// var expr = math.parse('x^3-3*x^2-2*x');
+// var expr = math.parse(' ');
 // var guesses = [];
 // var tanSlopes = [];
 
@@ -19,6 +19,7 @@
 
 function Newton(func, guess, domain) {
   this.func = func;
+  this.name = 'f(x)';
   this.expr = math.parse(func);
   this.dydx = math.diff(this.expr, 'x').toString();
   this.dydxExpr = math.diff(this.expr, 'x');
@@ -27,6 +28,8 @@ function Newton(func, guess, domain) {
   this.guesses = [];
   this.tanSlopes = [];
   this.ans = null;
+  this.yRight = null;
+  this.yLeft = null;
 }
 
 Newton.prototype.roots = function(guess) {
@@ -83,6 +86,10 @@ Newton.prototype.curveData = function(name, setColor) {
     points.push({x: i, y: math.eval(this.func, {x: i})});
   }
 
+  // set y boundaries
+  this.setYRight();
+  this.setYLeft();
+
   return {
     values: points,
     key: name,
@@ -125,8 +132,37 @@ Newton.prototype.makeLines = function(xVals) {
   var lines = [];
 
   for (i = 0; i < xVals.length; i++) {
-    lines.push(this.lineData(xVals[i], 'x'+i, '#303340'));
+    lines.push(this.lineData(xVals[i], 'x'+i, getColor()));
   }
 
   return lines;
+};
+
+Newton.prototype.setYRight = function() {
+  // get right int boundary for y val of curve on domain
+
+  val = math.eval(this.func, {x: this.domain[1]});
+
+  if (val < 0) {
+    this.yRight = Math.floor(val);
+  }
+  else {
+    this.yRight = Math.ceil(val);
+  }
+  return this.yRight;
+};
+
+Newton.prototype.setYLeft = function() {
+  // get left int boundary for y val of curve on domain
+
+  val = math.eval(this.func, {x: this.domain[0]});
+
+  if (val < 0) {
+    this.yLeft = Math.floor(val);
+  }
+  else {
+    this.yLeft = Math.ceil(val);
+  }
+
+  return this.yLeft;
 };
