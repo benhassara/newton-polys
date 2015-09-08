@@ -3,7 +3,21 @@ body {
   background-color: #303340;
 }
 
-.container {
+/*.container {
+  background-color: white;
+  padding-bottom: 20px;
+  border-radius: 5px;
+  margin-top: 10px;
+}*/
+
+#main-form-div {
+  background-color: white;
+  padding-bottom: 20px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.col-style {
   background-color: white;
   padding-bottom: 20px;
   border-radius: 5px;

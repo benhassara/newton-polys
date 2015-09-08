@@ -5,6 +5,7 @@ $(document).on('ready', function() {
   var newt = null;
   var root = null;
 
+  $('#ans').hide();
   $('#graph').hide();
   $('#newt-table').hide();
 
@@ -12,8 +13,10 @@ $(document).on('ready', function() {
   $('#get-poly').on('submit', function(event){
     event.preventDefault();
 
+    // cache a few divs
+    // var $('#')
+
     $('#graph svg').empty();
-    // $('#newt-table')
 
     // get vals
     var poly = $('#poly').val();
@@ -35,17 +38,17 @@ $(document).on('ready', function() {
                     .showXAxis(true)
                     .forceX(newt.domain)
                     .forceY([newt.yLeft, newt.yRight])
-                    .y(function(d){return math.round(d.y, 7);})
-    ;
+                    .y(function(d){return math.round(d.y, 7);});
 
+      // label axes
       chart.xAxis.axisLabel('x');
-
       chart.yAxis.axisLabel('y');
 
-      var curve = [newt.curveData(newt.name, '#9099BF')];
+      // generate curve and tangent lines plot points
+      var curve = newt.curveData(newt.name, '#9099BF');
       var lines = newt.makeLines(newt.guesses);
 
-      var myData = [curve[0]];
+      var myData = [curve];
       for (var i = 0; i < lines.length; i++) {
         myData.push(lines[i]);
       }
@@ -55,15 +58,18 @@ $(document).on('ready', function() {
                              .call(chart);
 
       nv.utils.windowResize(function(){chart.update();});
-      console.log(chart.legend);
       return chart;
 
     });
 
     // make table
-    makeTable($('#newt-table'), newt.guesses);
+    makeTable($('#newt-table-body'), newt.guesses);
+
+    // add final root approximation above table
+    $('#ans-root').html(root);
 
     $('#graph').show();
+    $('#ans').show();
     $('#newt-table').show();
 
   });
